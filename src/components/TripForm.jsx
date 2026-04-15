@@ -125,6 +125,9 @@ export default function TripForm({ onPlanReady, loading, serverError }) {
         <fieldset className="trip-form__group">
           <legend className="sr-only">Route locations</legend>
           <p className="trip-form__group-title">Route Locations</p>
+          <p className="trip-form__group-helper">
+            Search by city and state (example: Dallas, TX) or pick from suggestions.
+          </p>
 
           {['current_location', 'pickup_location', 'dropoff_location'].map(name => (
             <LocationAutocomplete

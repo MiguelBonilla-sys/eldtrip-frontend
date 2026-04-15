@@ -21,11 +21,13 @@ export default function LocationAutocomplete({
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [fetchError, setFetchError] = useState(false)
+  const [hasSearched, setHasSearched] = useState(false)
   const [options, setOptions] = useState([])
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
 
   const containerRef = useRef(null)
   const requestTokenRef = useRef(0)
+  const cacheRef = useRef(new Map())
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -44,11 +46,23 @@ export default function LocationAutocomplete({
       return
     }
 
+    const requestToken = requestTokenRef.current + 1
+    requestTokenRef.current = requestToken
+
     const query = value.trim()
     const queryForSearch = query.length >= MIN_QUERY_LENGTH ? query : ''
 
-    const requestToken = requestTokenRef.current + 1
-    requestTokenRef.current = requestToken
+    const cachedOptions = cacheRef.current.get(queryForSearch)
+    if (cachedOptions) {
+      setLoading(false)
+      setFetchError(false)
+      setHasSearched(true)
+      setOptions(cachedOptions)
+      setHighlightedIndex(cachedOptions.length > 0 ? 0 : -1)
+      return
+    }
+
+    setHasSearched(false)
     setLoading(true)
 
     const timeoutId = setTimeout(async () => {
@@ -57,7 +71,9 @@ export default function LocationAutocomplete({
         if (requestTokenRef.current !== requestToken) {
           return
         }
+        cacheRef.current.set(queryForSearch, nextOptions)
         setFetchError(false)
+        setHasSearched(true)
         setOptions(nextOptions)
         setHighlightedIndex(nextOptions.length > 0 ? 0 : -1)
       } catch {
@@ -65,6 +81,7 @@ export default function LocationAutocomplete({
           return
         }
         setFetchError(true)
+        setHasSearched(true)
         setOptions([])
         setHighlightedIndex(-1)
       } finally {
@@ -103,7 +120,10 @@ export default function LocationAutocomplete({
 
     if (event.key === 'ArrowUp') {
       event.preventDefault()
-      setHighlightedIndex(prev => Math.max(prev - 1, 0))
+      setHighlightedIndex(prev => {
+        if (options.length === 0) return -1
+        return Math.max(prev - 1, 0)
+      })
       return
     }
 
@@ -113,12 +133,26 @@ export default function LocationAutocomplete({
     }
   }
 
-  const shouldShowMenu = isOpen
+  function handleInputBlur() {
+    onBlurField(name, value)
+    setIsOpen(false)
+    setHighlightedIndex(-1)
+  }
+
+  const shouldShowMenu =
+    isOpen && (loading || options.length > 0 || (!fetchError && hasSearched && value.trim().length >= MIN_QUERY_LENGTH))
+  const warningId = `${id}-warning`
 
   return (
     <div className="trip-form__field location-autocomplete" ref={containerRef}>
       <label htmlFor={id}>{label}</label>
       <div className="location-autocomplete__control">
+        <span className="location-autocomplete__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M10.5 3a7.5 7.5 0 1 0 4.73 13.33l4.22 4.22 1.06-1.06-4.22-4.22A7.5 7.5 0 0 0 10.5 3Zm0 1.5a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" />
+          </svg>
+        </span>
+
         <input
           id={id}
           name={name}
@@ -130,11 +164,11 @@ export default function LocationAutocomplete({
             setIsOpen(true)
           }}
           onFocus={() => setIsOpen(true)}
-          onBlur={() => onBlurField(name, value)}
+          onBlur={handleInputBlur}
           onKeyDown={handleInputKeyDown}
           role="combobox"
           aria-invalid={!!error}
-          aria-describedby={error ? errorId : `${id}-hint`}
+          aria-describedby={error ? errorId : fetchError ? warningId : undefined}
           aria-autocomplete="list"
           aria-controls={`${id}-listbox`}
           aria-expanded={shouldShowMenu}
@@ -150,21 +184,17 @@ export default function LocationAutocomplete({
         {loading && <span className="location-autocomplete__spinner" aria-hidden="true" />}
       </div>
 
-      <span className="trip-form__field-hint" id={`${id}-hint`}>
-        Type to search or choose one of the popular suggestions.
-      </span>
+      {fetchError && (
+        <span className="location-autocomplete__warning" id={warningId} role="status" aria-live="polite">
+          Suggestions unavailable right now. You can still type manually.
+        </span>
+      )}
 
       {shouldShowMenu && (
         <div className="location-autocomplete__menu" id={`${id}-listbox`} role="listbox">
           {loading && <div className="location-autocomplete__status">Searching locations...</div>}
 
-          {!loading && fetchError && (
-            <div className="location-autocomplete__status">
-              Could not load suggestions. Please try again.
-            </div>
-          )}
-
-          {!loading && !fetchError && options.length === 0 && (
+          {!loading && !fetchError && hasSearched && options.length === 0 && (
             <div className="location-autocomplete__status">No matching cities found.</div>
           )}
 
@@ -179,12 +209,16 @@ export default function LocationAutocomplete({
                 id={`${id}-option-${index}`}
                 role="option"
                 aria-selected={index === highlightedIndex}
+                tabIndex={-1}
                 onMouseDown={event => event.preventDefault()}
                 onClick={() => handleSelect(option)}
               >
-                <span className="location-autocomplete__option-label">{option.label}</span>
-                <span className="location-autocomplete__option-meta">
-                  Pop. {Number(option.population || 0).toLocaleString()}
+                <span className="location-autocomplete__option-main">
+                  <span className="location-autocomplete__option-label">{option.label}</span>
+                  <span className="location-autocomplete__option-meta">
+                    <span className="location-autocomplete__state-chip">{option.state_code || option.state}</span>
+                    <span>Pop. {Number(option.population || 0).toLocaleString()}</span>
+                  </span>
                 </span>
               </button>
             ))}

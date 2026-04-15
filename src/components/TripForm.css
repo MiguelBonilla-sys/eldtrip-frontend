@@ -75,6 +75,13 @@
   color: var(--color-text-muted);
 }
 
+.trip-form__group-helper {
+  margin-top: -0.1rem;
+  font-size: 0.77rem;
+  color: #5b6d8f;
+  line-height: 1.35;
+}
+
 .trip-form__field {
   display: flex;
   flex-direction: column;

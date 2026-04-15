@@ -1,16 +1,15 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './LogSheet.css'
 
 const ROW_LABELS = ['Off Duty', 'Sleeper Berth', 'Driving', 'On Duty Not Driving']
 const ROW_KEYS = ['off_duty', 'sleeper', 'driving', 'on_duty']
 const ROW_COLORS = {
-  off_duty: '#e8f5e9', // Light green
-  sleeper: '#fff3e0', // Light orange
-  driving: '#e3f2fd', // Light blue
-  on_duty: '#fce4ec', // Light pink
+  off_duty: '#e8f5e9',
+  sleeper: '#fff3e0',
+  driving: '#e3f2fd',
+  on_duty: '#fce4ec',
 }
 
-// Canvas layout constants (logical pixels)
 const W = 960
 const H = 620
 const HEADER_H = 120
@@ -35,14 +34,12 @@ function timeToX(hhmm) {
 }
 
 function drawGrid(ctx) {
-  // Row background colors
   ROW_KEYS.forEach((key, i) => {
     const y = GRID_TOP + i * ROW_H
     ctx.fillStyle = ROW_COLORS[key]
     ctx.fillRect(GRID_LEFT, y, GRID_W, ROW_H)
   })
 
-  // Horizontal row lines
   ctx.strokeStyle = '#999'
   ctx.lineWidth = 1
   for (let i = 0; i <= 4; i++) {
@@ -53,7 +50,6 @@ function drawGrid(ctx) {
     ctx.stroke()
   }
 
-  // Vertical hour lines
   for (let h = 0; h <= 24; h++) {
     const x = GRID_LEFT + (h / 24) * GRID_W
     const isMidnight = h === 0 || h === 24
@@ -65,7 +61,6 @@ function drawGrid(ctx) {
     ctx.lineTo(x, GRID_BOTTOM)
     ctx.stroke()
 
-    // Quarter-hour ticks (only at bottom)
     if (h < 24) {
       for (let q = 1; q <= 3; q++) {
         const qx = x + (q / 4) * (GRID_W / 24)
@@ -78,19 +73,18 @@ function drawGrid(ctx) {
       }
     }
 
-    // Hour labels (12-hour format)
     if (h >= 0 && h < 24) {
       ctx.fillStyle = '#333'
-      ctx.font = 'bold 10px sans-serif'
+      ctx.font = '700 10px "IBM Plex Mono", monospace'
       ctx.textAlign = 'center'
-      let label = h === 0 ? '12am' : h === 12 ? '12pm' : h < 12 ? `${h}am` : `${h - 12}pm`
+      const label = h === 0 ? '12am' : h === 12 ? '12pm' : h < 12 ? `${h}am` : `${h - 12}pm`
       ctx.fillText(label, x, GRID_BOTTOM + 12)
     }
   }
 }
 
 function drawRowLabels(ctx) {
-  ctx.font = 'bold 11px sans-serif'
+  ctx.font = '700 11px "IBM Plex Mono", monospace'
   ctx.textAlign = 'right'
   ctx.fillStyle = '#222'
   ROW_KEYS.forEach((key, i) => {
@@ -121,7 +115,6 @@ function drawSegments(ctx, segments) {
     const x2 = timeToX(seg.end <= seg.start ? '23:59' : seg.end)
     const y = ROW_Y[key]
 
-    // Vertical connector from previous row
     if (prevKey !== null && prevKey !== key && prevY !== null) {
       ctx.strokeStyle = '#555'
       ctx.lineWidth = 2.5
@@ -131,7 +124,6 @@ function drawSegments(ctx, segments) {
       ctx.stroke()
     }
 
-    // Horizontal line for this status period (thicker, colored)
     ctx.strokeStyle = segmentColors[key]
     ctx.lineWidth = 5
     ctx.lineCap = 'round'
@@ -141,7 +133,6 @@ function drawSegments(ctx, segments) {
     ctx.lineTo(x2, y)
     ctx.stroke()
 
-    // Add bracket on left side for "on-duty" periods
     if (key === 'on_duty') {
       ctx.strokeStyle = '#555'
       ctx.lineWidth = 1.5
@@ -160,24 +151,20 @@ function drawSegments(ctx, segments) {
 }
 
 function drawHeader(ctx, logData, dayNumber, totalDays) {
-  // Title background
   ctx.fillStyle = '#1565c0'
   ctx.fillRect(0, 0, W, 35)
 
-  // Title
   ctx.fillStyle = '#fff'
-  ctx.font = 'bold 18px sans-serif'
+  ctx.font = '700 18px "Sora", sans-serif'
   ctx.textAlign = 'left'
   ctx.fillText('FMCSA Electronic Logging Device (ELD) Daily Log', 10, 24)
 
-  // Border around title
   ctx.strokeStyle = '#1565c0'
   ctx.lineWidth = 2
   ctx.strokeRect(0, 0, W, 35)
 
-  // Header info (date, driver, vehicle)
   ctx.fillStyle = '#111'
-  ctx.font = 'bold 12px sans-serif'
+  ctx.font = '700 12px "Source Sans 3", sans-serif'
   ctx.textAlign = 'left'
   let infoY = 50
 
@@ -186,19 +173,23 @@ function drawHeader(ctx, logData, dayNumber, totalDays) {
   ctx.fillText(`Driver Start Time: ${logData.driver_start_time}`, 400, infoY)
 
   infoY += 18
-  ctx.font = '11px sans-serif'
+  ctx.font = '500 11px "Source Sans 3", sans-serif'
   ctx.fillStyle = '#333'
   ctx.fillText(`Miles Today: ${logData.miles_today} mi`, 10, infoY)
 
-  // Totals preview (top right)
-  ctx.font = 'bold 10px sans-serif'
+  ctx.font = '700 10px "IBM Plex Mono", monospace'
   ctx.textAlign = 'right'
   ctx.fillStyle = '#555'
   ctx.fillText('Daily Totals:', W - 10, 50)
 
   const totalsPreview = logData.totals
   let previewY = 62
-  const labelColor = { off_duty: '#2e7d32', sleeper: '#e65100', driving: '#1565c0', on_duty: '#c2185b' }
+  const labelColor = {
+    off_duty: '#2e7d32',
+    sleeper: '#e65100',
+    driving: '#1565c0',
+    on_duty: '#c2185b',
+  }
 
   Object.entries(totalsPreview).forEach(([key, value]) => {
     ctx.fillStyle = labelColor[key]
@@ -206,7 +197,6 @@ function drawHeader(ctx, logData, dayNumber, totalDays) {
     previewY += 12
   })
 
-  // Border
   ctx.strokeStyle = '#333'
   ctx.lineWidth = 2
   ctx.strokeRect(0.5, 0.5, W - 1, H - 1)
@@ -236,37 +226,40 @@ function drawTotals(ctx, totals) {
     const boxX = cx
     const color = colors[key]
 
-    // Background box
     ctx.fillStyle = color
     ctx.globalAlpha = 0.1
     ctx.fillRect(boxX + 2, boxY, colW - 4, boxH)
-    ctx.globalAlpha = 1.0
+    ctx.globalAlpha = 1
 
-    // Border
     ctx.strokeStyle = color
     ctx.lineWidth = 1.5
     ctx.strokeRect(boxX + 2, boxY, colW - 4, boxH)
 
-    // Label
     ctx.fillStyle = '#333'
-    ctx.font = 'bold 11px sans-serif'
+    ctx.font = '700 11px "IBM Plex Mono", monospace'
     ctx.textAlign = 'center'
     ctx.fillText(label, boxX + colW / 2, boxY + 16)
 
-    // Value
     ctx.fillStyle = color
-    ctx.font = 'bold 18px sans-serif'
+    ctx.font = '700 18px "Sora", sans-serif'
     ctx.fillText(`${(totals[key] || 0).toFixed(2)}`, boxX + colW / 2, boxY + 38)
 
-    // Units
     ctx.fillStyle = '#555'
-    ctx.font = '10px sans-serif'
+    ctx.font = '500 10px "IBM Plex Mono", monospace'
     ctx.fillText('hours', boxX + colW / 2, boxY + 48)
   })
 }
 
-export default function LogSheet({ logData, dayNumber, totalDays }) {
+export default function LogSheet({ logData, dayNumber, totalDays, disablePrinting = false }) {
   const canvasRef = useRef(null)
+  const [printError, setPrintError] = useState('')
+
+  const totalsSummary =
+    `Day ${dayNumber} of ${totalDays}. ` +
+    `Off duty ${Number(logData.totals.off_duty || 0).toFixed(2)} hours, ` +
+    `sleeper ${Number(logData.totals.sleeper || 0).toFixed(2)} hours, ` +
+    `driving ${Number(logData.totals.driving || 0).toFixed(2)} hours, ` +
+    `on duty ${Number(logData.totals.on_duty || 0).toFixed(2)} hours.`
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -275,14 +268,11 @@ export default function LogSheet({ logData, dayNumber, totalDays }) {
     const dpr = window.devicePixelRatio || 1
     canvas.width = W * dpr
     canvas.height = H * dpr
-    canvas.style.width = `${W}px`
-    canvas.style.height = `${H}px`
 
     const ctx = canvas.getContext('2d')
     ctx.scale(dpr, dpr)
     ctx.clearRect(0, 0, W, H)
 
-    // White background
     ctx.fillStyle = 'white'
     ctx.fillRect(0, 0, W, H)
 
@@ -294,10 +284,21 @@ export default function LogSheet({ logData, dayNumber, totalDays }) {
   }, [logData, dayNumber, totalDays])
 
   function handlePrint() {
+    if (disablePrinting) return
+
     const canvas = canvasRef.current
     if (!canvas) return
+
     const dataUrl = canvas.toDataURL('image/png', 1.0)
-    const win = window.open('', '_blank')
+    const win = window.open('', '_blank', 'noopener,noreferrer')
+
+    if (!win) {
+      setPrintError('Print window was blocked by your browser. Allow popups and try again.')
+      return
+    }
+
+    setPrintError('')
+
     const pageTitle = `ELD Daily Log - ${logData.date} - Day ${dayNumber} of ${totalDays}`
     win.document.write(`
       <!DOCTYPE html>
@@ -313,7 +314,7 @@ export default function LogSheet({ logData, dayNumber, totalDays }) {
               box-sizing: border-box;
             }
             body {
-              font-family: Arial, sans-serif;
+              font-family: 'Source Sans 3', 'Segoe UI', sans-serif;
               background: #f5f5f5;
               padding: 10px;
             }
@@ -376,6 +377,7 @@ export default function LogSheet({ logData, dayNumber, totalDays }) {
         </body>
       </html>
     `)
+    win.document.close()
   }
 
   return (
@@ -385,12 +387,31 @@ export default function LogSheet({ logData, dayNumber, totalDays }) {
         <button
           className="log-sheet__print-btn"
           onClick={handlePrint}
-          title="Click to print this daily log sheet"
+          title={
+            disablePrinting
+              ? 'Printing is disabled until route recalculation succeeds.'
+              : 'Click to print this daily log sheet'
+          }
+          disabled={disablePrinting}
         >
-          🖨️ Print Day {dayNumber}
+          Print Day {dayNumber}
         </button>
       </div>
+
+      {disablePrinting && (
+        <p className="log-sheet__print-note no-print" role="status">
+          Printing is locked while the latest route recalculation remains unresolved.
+        </p>
+      )}
+
+      {printError && (
+        <p className="log-sheet__print-error no-print" role="alert">
+          {printError}
+        </p>
+      )}
+
       <canvas ref={canvasRef} className="log-sheet__canvas" />
+      <p className="sr-only">{totalsSummary}</p>
     </div>
   )
 }

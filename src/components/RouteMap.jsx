@@ -12,21 +12,21 @@ L.Icon.Default.mergeOptions({
 })
 
 const STOP_COLORS = {
-  pickup: '#c2185b',        // On-Duty pink
-  dropoff: '#c2185b',       // On-Duty pink
-  rest_30min: '#f59e0b',    // Amber for mandatory break
-  fuel: '#1565c0',          // Driving blue
-  rest_10h: '#e65100',      // Sleeper orange
-  reset_34h: '#2e7d32',     // Off-Duty green
+  pickup: '#c2185b',
+  dropoff: '#c2185b',
+  rest_30min: '#f59e0b',
+  fuel: '#1565c0',
+  rest_10h: '#e65100',
+  reset_34h: '#2e7d32',
 }
 
 const STOP_LABELS = {
-  pickup: '📦 Pickup',
-  dropoff: '🏁 Dropoff',
-  rest_30min: '⏸ 30-min break',
-  fuel: '⛽ Fuel stop',
-  rest_10h: '🛌 10h rest',
-  reset_34h: '🔄 34h cycle reset',
+  pickup: 'Pickup (On Duty)',
+  dropoff: 'Dropoff (On Duty)',
+  rest_30min: '30-min break',
+  fuel: 'Fuel stop',
+  rest_10h: '10h rest',
+  reset_34h: '34h cycle reset',
 }
 
 function makeIcon(color) {
@@ -66,17 +66,34 @@ function FitBounds({ polyline }) {
   return null
 }
 
-export default function RouteMap({ route, stops }) {
+export default function RouteMap({ route, stops, summary, loading = false, error = null }) {
+  const emptyTitle = loading
+    ? 'Calculating route and stops...'
+    : error
+      ? 'Route planning needs attention'
+      : 'Map preview is ready when you are'
+
+  const emptyDescription = loading
+    ? 'We are fetching route geometry and HOS stop schedule.'
+    : error
+      ? 'Please review your trip fields and submit again.'
+      : 'Enter trip details to display route geometry, stops, and rest markers.'
+
   if (!route) {
     return (
       <div className="route-map route-map--empty">
-        <p>Enter trip details to see the route.</p>
+        <div className="route-map__empty-content">
+          <h3>{emptyTitle}</h3>
+          <p>{emptyDescription}</p>
+          {error && <p className="route-map__empty-error">{error}</p>}
+        </div>
       </div>
     )
   }
 
   const { polyline, origin, pickup, dropoff } = route
-  const center = polyline.length > 0 ? polyline[Math.floor(polyline.length / 2)] : [39.5, -98.35]
+  const center =
+    polyline.length > 0 ? polyline[Math.floor(polyline.length / 2)] : [39.5, -98.35]
 
   // Build stop markers from the stops array
   // We'll distribute them roughly along the polyline
@@ -93,6 +110,27 @@ export default function RouteMap({ route, stops }) {
 
   return (
     <div className="route-map">
+      {summary && (
+        <div className="route-map__summary no-print" aria-live="polite">
+          <div>
+            <span>Miles</span>
+            <strong>{summary.totalMiles}</strong>
+          </div>
+          <div>
+            <span>Drive Time</span>
+            <strong>{summary.drivingHours}h</strong>
+          </div>
+          <div>
+            <span>Days</span>
+            <strong>{summary.totalDays}</strong>
+          </div>
+          <div>
+            <span>Stops</span>
+            <strong>{summary.totalStops}</strong>
+          </div>
+        </div>
+      )}
+
       <MapContainer
         center={center}
         zoom={6}
@@ -123,7 +161,9 @@ export default function RouteMap({ route, stops }) {
         {pickup && (
           <Marker position={[pickup.lat, pickup.lng]} icon={makeEndpointIcon('#c2185b')}>
             <Popup>
-              <strong>📦 Pickup</strong><br />{pickup.display_name}
+              <strong>Pickup</strong>
+              <br />
+              {pickup.display_name}
             </Popup>
           </Marker>
         )}
@@ -132,7 +172,9 @@ export default function RouteMap({ route, stops }) {
         {dropoff && (
           <Marker position={[dropoff.lat, dropoff.lng]} icon={makeEndpointIcon('#c2185b')}>
             <Popup>
-              <strong>🏁 Dropoff</strong><br />{dropoff.display_name}
+              <strong>Dropoff</strong>
+              <br />
+              {dropoff.display_name}
             </Popup>
           </Marker>
         )}
@@ -146,8 +188,14 @@ export default function RouteMap({ route, stops }) {
           >
             <Popup>
               <strong>{STOP_LABELS[stop.type] || stop.type}</strong>
-              {stop.notes && <><br />{stop.notes}</>}
-              <br />{stop.duration_hours}h
+              {stop.notes && (
+                <>
+                  <br />
+                  {stop.notes}
+                </>
+              )}
+              <br />
+              {stop.duration_hours}h
             </Popup>
           </Marker>
         ))}
@@ -164,7 +212,25 @@ export default function RouteMap({ route, stops }) {
             <span>{label}</span>
           </div>
         ))}
+
+        {stopMarkers.length > 0 && (
+          <p className="route-map__legend-note">
+            Intermediate stop markers are estimated along the route line.
+          </p>
+        )}
       </div>
+
+      {loading && (
+        <div className="route-map__overlay route-map__overlay--loading no-print" role="status">
+          Recalculating route...
+        </div>
+      )}
+
+      {error && route && (
+        <div className="route-map__overlay route-map__overlay--error no-print" role="alert">
+          Showing previous route while the latest request is retried.
+        </div>
+      )}
     </div>
   )
 }

@@ -1,46 +1,175 @@
-*, *::before, *::after {
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Sora:wght@500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&display=swap');
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
 :root {
-  --color-primary: #1a56db;
-  --color-primary-dark: #1245b8;
-  --color-danger: #e02424;
-  --color-success: #057a55;
-  --color-gray-50: #f9fafb;
-  --color-gray-100: #f3f4f6;
-  --color-gray-200: #e5e7eb;
-  --color-gray-400: #9ca3af;
-  --color-gray-600: #4b5563;
-  --color-gray-700: #374151;
-  --color-gray-900: #111827;
-  --font-sans: system-ui, -apple-system, sans-serif;
-  --font-mono: 'Courier New', Courier, monospace;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
-  --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
-  --radius: 8px;
+  --font-display: 'Sora', 'Trebuchet MS', sans-serif;
+  --font-body: 'Source Sans 3', 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Consolas', monospace;
+
+  --color-bg: #f3f5f9;
+  --color-surface: #ffffff;
+  --color-surface-soft: #f7f9fc;
+  --color-surface-strong: #eef3fb;
+  --color-text: #14213d;
+  --color-text-muted: #4b5a77;
+  --color-border: #d5ddec;
+  --color-border-strong: #b5c4dd;
+
+  --color-primary: #1654cc;
+  --color-primary-dark: #103e98;
+  --color-danger: #c1263a;
+  --color-danger-soft: #fdecef;
+  --color-success: #1f7a45;
+  --color-success-soft: #e9f7ef;
+
+  --hos-off: #2e7d32;
+  --hos-sleeper: #e65100;
+  --hos-driving: #1565c0;
+  --hos-on-duty: #c2185b;
+  --hos-break: #f59e0b;
+  --hos-off-soft: #e8f5e9;
+  --hos-sleeper-soft: #fff3e0;
+  --hos-driving-soft: #e3f2fd;
+  --hos-on-duty-soft: #fce4ec;
+
+  --shadow-sm: 0 1px 2px rgba(13, 33, 71, 0.08);
+  --shadow: 0 12px 30px rgba(16, 43, 92, 0.12);
+  --shadow-lg: 0 24px 50px rgba(16, 43, 92, 0.18);
+
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 24px;
+
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --focus-ring: 0 0 0 3px rgba(22, 84, 204, 0.22);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
 }
 
 body {
-  font-family: var(--font-sans);
-  color: var(--color-gray-900);
-  background: var(--color-gray-50);
-  line-height: 1.5;
+  font-family: var(--font-body);
+  color: var(--color-text);
+  line-height: 1.45;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(54, 116, 227, 0.15), transparent 30%),
+    radial-gradient(circle at 92% 2%, rgba(233, 81, 0, 0.14), transparent 34%),
+    linear-gradient(175deg, #f4f7fc 0%, #eef2f8 56%, #f7f9fd 100%);
 }
 
-h1, h2, h3 {
-  line-height: 1.2;
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
 
 button {
   cursor: pointer;
-  font-family: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+::selection {
+  background: rgba(21, 101, 192, 0.2);
+}
+
+.panel {
+  background: linear-gradient(160deg, var(--color-surface) 0%, #fcfdff 100%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.34rem 0.78rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.status-chip--ready {
+  color: var(--color-success);
+  background: var(--color-success-soft);
+  border-color: rgba(31, 122, 69, 0.25);
+}
+
+.status-chip--idle {
+  color: var(--color-primary);
+  background: rgba(22, 84, 204, 0.12);
+  border-color: rgba(22, 84, 204, 0.24);
+}
+
+.status-chip--loading {
+  color: #9a5f00;
+  background: #fff4dd;
+  border-color: rgba(239, 162, 27, 0.32);
+}
+
+.status-chip--error {
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
+  border-color: rgba(193, 38, 58, 0.22);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  border: 0;
+  padding: 0;
+  clip: rect(0 0 0 0);
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 @media print {
+  body {
+    background: #fff;
+    color: #000;
+  }
+
   .no-print {
     display: none !important;
   }

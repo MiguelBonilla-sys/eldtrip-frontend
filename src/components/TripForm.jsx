@@ -40,6 +40,7 @@ export default function TripForm({ onPlanReady, loading, serverError }) {
   const [fields, setFields] = useState(INITIAL_STATE)
   const [errors, setErrors] = useState({})
   const [touched, setTouched] = useState({})
+  const errorCount = Object.values(errors).filter(Boolean).length
 
   function handleChange(e) {
     const { name, value } = e.target
@@ -77,8 +78,20 @@ export default function TripForm({ onPlanReady, loading, serverError }) {
   }
 
   return (
-    <form className="trip-form" onSubmit={handleSubmit} noValidate>
-      <h2 className="trip-form__title">Plan Your Trip</h2>
+    <form className={`trip-form panel ${loading ? 'trip-form--loading' : ''}`} onSubmit={handleSubmit} noValidate>
+      <div className="trip-form__heading">
+        <p className="trip-form__eyebrow">Dispatch Inputs</p>
+        <h2 className="trip-form__title">Plan Your Trip</h2>
+        <p className="trip-form__subtitle">
+          Enter route details to generate mandatory stops and FMCSA-compliant daily logs.
+        </p>
+      </div>
+
+      {errorCount > 1 && (
+        <div className="trip-form__error-summary" role="alert" aria-live="polite">
+          Please review {errorCount} highlighted fields before submitting.
+        </div>
+      )}
 
       {serverError && (
         <div className="trip-form__error-banner" role="alert">
@@ -86,53 +99,67 @@ export default function TripForm({ onPlanReady, loading, serverError }) {
         </div>
       )}
 
-      {['current_location', 'pickup_location', 'dropoff_location'].map(name => (
-        <div className="trip-form__field" key={name}>
-          <label htmlFor={name}>{FIELD_LABELS[name]}</label>
-          <input
-            id={name}
-            name={name}
-            type="text"
-            value={fields[name]}
-            placeholder={PLACEHOLDERS[name]}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            aria-invalid={!!errors[name]}
-            aria-describedby={errors[name] ? `${name}-error` : undefined}
-          />
-          {errors[name] && (
-            <span className="trip-form__field-error" id={`${name}-error`}>
-              {errors[name]}
-            </span>
-          )}
-        </div>
-      ))}
+      <fieldset className="trip-form__fieldset" disabled={loading}>
+        <fieldset className="trip-form__group">
+          <legend className="sr-only">Route locations</legend>
+          <p className="trip-form__group-title">Route Locations</p>
 
-      <div className="trip-form__field">
-        <label htmlFor="current_cycle_used">{FIELD_LABELS.current_cycle_used}</label>
-        <input
-          id="current_cycle_used"
-          name="current_cycle_used"
-          type="number"
-          min="0"
-          max="70"
-          step="0.5"
-          value={fields.current_cycle_used}
-          placeholder={PLACEHOLDERS.current_cycle_used}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          aria-invalid={!!errors.current_cycle_used}
-          aria-describedby={errors.current_cycle_used ? 'cycle-error' : undefined}
-        />
-        {errors.current_cycle_used && (
-          <span className="trip-form__field-error" id="cycle-error">
-            {errors.current_cycle_used}
-          </span>
-        )}
-        <span className="trip-form__field-hint">
-          Enter how many hours you've driven in the last 8 days (0 if starting fresh).
-        </span>
-      </div>
+          {['current_location', 'pickup_location', 'dropoff_location'].map(name => (
+            <div className="trip-form__field" key={name}>
+              <label htmlFor={name}>{FIELD_LABELS[name]}</label>
+              <input
+                id={name}
+                name={name}
+                type="text"
+                value={fields[name]}
+                placeholder={PLACEHOLDERS[name]}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                aria-invalid={!!errors[name]}
+                aria-describedby={errors[name] ? `${name}-error` : undefined}
+              />
+              {errors[name] && (
+                <span className="trip-form__field-error" id={`${name}-error`}>
+                  {errors[name]}
+                </span>
+              )}
+            </div>
+          ))}
+        </fieldset>
+
+        <fieldset className="trip-form__group">
+          <legend className="sr-only">Driver cycle details</legend>
+          <p className="trip-form__group-title">Driver Cycle</p>
+
+          <div className="trip-form__field">
+            <label htmlFor="current_cycle_used">{FIELD_LABELS.current_cycle_used}</label>
+            <input
+              id="current_cycle_used"
+              name="current_cycle_used"
+              type="number"
+              min="0"
+              max="70"
+              step="0.5"
+              value={fields.current_cycle_used}
+              placeholder={PLACEHOLDERS.current_cycle_used}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              aria-invalid={!!errors.current_cycle_used}
+              aria-describedby={
+                errors.current_cycle_used ? 'cycle-error cycle-hint' : 'cycle-hint'
+              }
+            />
+            {errors.current_cycle_used && (
+              <span className="trip-form__field-error" id="cycle-error">
+                {errors.current_cycle_used}
+              </span>
+            )}
+            <span className="trip-form__field-hint" id="cycle-hint">
+              Enter total hours used in the last 8 days before starting this trip.
+            </span>
+          </div>
+        </fieldset>
+      </fieldset>
 
       <button
         type="submit"
@@ -140,8 +167,15 @@ export default function TripForm({ onPlanReady, loading, serverError }) {
         disabled={loading}
         aria-busy={loading}
       >
-        {loading ? 'Calculating…' : 'Plan Trip'}
+        {loading && <span className="trip-form__spinner" aria-hidden="true" />}
+        <span>{loading ? 'Calculating Route...' : 'Plan Trip'}</span>
       </button>
+
+      <p className="trip-form__status" aria-live="polite">
+        {loading
+          ? 'Calculating mileage, mandatory breaks, and compliant daily logs.'
+          : 'Ready to generate route instructions and ELD sheets.'}
+      </p>
     </form>
   )
 }

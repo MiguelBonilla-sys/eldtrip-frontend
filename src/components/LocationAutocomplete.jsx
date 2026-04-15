@@ -45,13 +45,7 @@ export default function LocationAutocomplete({
     }
 
     const query = value.trim()
-    if (query.length < MIN_QUERY_LENGTH) {
-      setLoading(false)
-      setFetchError(false)
-      setOptions([])
-      setHighlightedIndex(-1)
-      return
-    }
+    const queryForSearch = query.length >= MIN_QUERY_LENGTH ? query : ''
 
     const requestToken = requestTokenRef.current + 1
     requestTokenRef.current = requestToken
@@ -59,7 +53,7 @@ export default function LocationAutocomplete({
 
     const timeoutId = setTimeout(async () => {
       try {
-        const nextOptions = await searchLocations(query, DEFAULT_LIMIT)
+        const nextOptions = await searchLocations(queryForSearch, DEFAULT_LIMIT)
         if (requestTokenRef.current !== requestToken) {
           return
         }
@@ -119,7 +113,7 @@ export default function LocationAutocomplete({
     }
   }
 
-  const shouldShowMenu = isOpen && value.trim().length >= MIN_QUERY_LENGTH
+  const shouldShowMenu = isOpen
 
   return (
     <div className="trip-form__field location-autocomplete" ref={containerRef}>
@@ -157,7 +151,7 @@ export default function LocationAutocomplete({
       </div>
 
       <span className="trip-form__field-hint" id={`${id}-hint`}>
-        Type at least 2 letters to search suggestions.
+        Type to search or choose one of the popular suggestions.
       </span>
 
       {shouldShowMenu && (

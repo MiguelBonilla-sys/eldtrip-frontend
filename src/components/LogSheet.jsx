@@ -3,19 +3,25 @@ import './LogSheet.css'
 
 const ROW_LABELS = ['Off Duty', 'Sleeper Berth', 'Driving', 'On Duty Not Driving']
 const ROW_KEYS = ['off_duty', 'sleeper', 'driving', 'on_duty']
+const ROW_COLORS = {
+  off_duty: '#e8f5e9', // Light green
+  sleeper: '#fff3e0', // Light orange
+  driving: '#e3f2fd', // Light blue
+  on_duty: '#fce4ec', // Light pink
+}
 
 // Canvas layout constants (logical pixels)
-const W = 900
-const H = 300
-const HEADER_H = 50
-const GRID_LEFT = 80
-const GRID_RIGHT = W - 10
+const W = 960
+const H = 620
+const HEADER_H = 120
+const GRID_LEFT = 90
+const GRID_RIGHT = W - 20
 const GRID_W = GRID_RIGHT - GRID_LEFT
-const GRID_TOP = HEADER_H + 10
-const ROW_H = 30
+const GRID_TOP = HEADER_H + 20
+const ROW_H = 45
 const GRID_H = ROW_H * 4
 const GRID_BOTTOM = GRID_TOP + GRID_H
-const TOTALS_Y = GRID_BOTTOM + 14
+const TOTALS_Y = GRID_BOTTOM + 30
 
 const ROW_Y = ROW_KEYS.reduce((acc, key, i) => {
   acc[key] = GRID_TOP + i * ROW_H + ROW_H / 2
@@ -29,10 +35,16 @@ function timeToX(hhmm) {
 }
 
 function drawGrid(ctx) {
-  ctx.strokeStyle = '#bbb'
-  ctx.lineWidth = 0.5
+  // Row background colors
+  ROW_KEYS.forEach((key, i) => {
+    const y = GRID_TOP + i * ROW_H
+    ctx.fillStyle = ROW_COLORS[key]
+    ctx.fillRect(GRID_LEFT, y, GRID_W, ROW_H)
+  })
 
   // Horizontal row lines
+  ctx.strokeStyle = '#999'
+  ctx.lineWidth = 1
   for (let i = 0; i <= 4; i++) {
     const y = GRID_TOP + i * ROW_H
     ctx.beginPath()
@@ -46,65 +58,60 @@ function drawGrid(ctx) {
     const x = GRID_LEFT + (h / 24) * GRID_W
     const isMidnight = h === 0 || h === 24
     const isNoon = h === 12
-    ctx.lineWidth = isMidnight || isNoon ? 1 : 0.5
+    ctx.strokeStyle = isMidnight || isNoon ? '#333' : '#ccc'
+    ctx.lineWidth = isMidnight || isNoon ? 2 : 0.8
     ctx.beginPath()
     ctx.moveTo(x, GRID_TOP)
     ctx.lineTo(x, GRID_BOTTOM)
     ctx.stroke()
 
-    // Quarter-hour ticks
+    // Quarter-hour ticks (only at bottom)
     if (h < 24) {
       for (let q = 1; q <= 3; q++) {
         const qx = x + (q / 4) * (GRID_W / 24)
-        ctx.lineWidth = 0.3
+        ctx.strokeStyle = '#ddd'
+        ctx.lineWidth = 0.5
         ctx.beginPath()
-        ctx.moveTo(qx, GRID_BOTTOM - 6)
+        ctx.moveTo(qx, GRID_BOTTOM - 8)
         ctx.lineTo(qx, GRID_BOTTOM)
         ctx.stroke()
       }
     }
 
-    // Hour labels
-    if (h > 0 && h < 24) {
-      ctx.fillStyle = '#555'
-      ctx.font = '9px sans-serif'
+    // Hour labels (12-hour format)
+    if (h >= 0 && h < 24) {
+      ctx.fillStyle = '#333'
+      ctx.font = 'bold 10px sans-serif'
       ctx.textAlign = 'center'
-      ctx.fillText(h === 12 ? 'N' : h > 12 ? h - 12 : h, x, GRID_BOTTOM + 10)
+      let label = h === 0 ? '12am' : h === 12 ? '12pm' : h < 12 ? `${h}am` : `${h - 12}pm`
+      ctx.fillText(label, x, GRID_BOTTOM + 12)
     }
   }
-
-  // Midnight labels
-  ctx.fillStyle = '#555'
-  ctx.font = '9px sans-serif'
-  ctx.textAlign = 'center'
-  ctx.fillText('M', GRID_LEFT, GRID_BOTTOM + 10)
-  ctx.fillText('M', GRID_RIGHT, GRID_BOTTOM + 10)
-
-  // AM/PM labels
-  ctx.fillText('Midnight', GRID_LEFT + GRID_W * 0.02, GRID_BOTTOM + 20)
-  ctx.textAlign = 'center'
-  ctx.fillText('Noon', GRID_LEFT + GRID_W * 0.5, GRID_BOTTOM + 20)
-  ctx.fillText('Midnight', GRID_RIGHT - GRID_W * 0.02, GRID_BOTTOM + 20)
 }
 
 function drawRowLabels(ctx) {
-  ctx.font = '10px sans-serif'
+  ctx.font = 'bold 11px sans-serif'
   ctx.textAlign = 'right'
   ctx.fillStyle = '#222'
   ROW_KEYS.forEach((key, i) => {
-    const y = GRID_TOP + i * ROW_H + ROW_H / 2 + 3
-    ctx.fillText(ROW_LABELS[i], GRID_LEFT - 4, y)
+    const y = GRID_TOP + i * ROW_H + ROW_H / 2 + 4
+    ctx.fillText(ROW_LABELS[i], GRID_LEFT - 8, y)
   })
 }
 
 function drawSegments(ctx, segments) {
   if (!segments || segments.length === 0) return
 
-  ctx.lineWidth = 2.5
-  ctx.strokeStyle = '#111'
+  const segmentColors = {
+    off_duty: '#2e7d32',
+    sleeper: '#e65100',
+    driving: '#1565c0',
+    on_duty: '#c2185b',
+  }
 
   let prevKey = null
   let prevX = null
+  let prevY = null
 
   for (const seg of segments) {
     const key = seg.status
@@ -115,41 +122,93 @@ function drawSegments(ctx, segments) {
     const y = ROW_Y[key]
 
     // Vertical connector from previous row
-    if (prevKey !== null && prevKey !== key) {
+    if (prevKey !== null && prevKey !== key && prevY !== null) {
+      ctx.strokeStyle = '#555'
+      ctx.lineWidth = 2.5
       ctx.beginPath()
-      ctx.moveTo(prevX ?? x1, ROW_Y[prevKey])
+      ctx.moveTo(prevX ?? x1, prevY)
       ctx.lineTo(x1, y)
       ctx.stroke()
     }
 
-    // Horizontal line for this status period
+    // Horizontal line for this status period (thicker, colored)
+    ctx.strokeStyle = segmentColors[key]
+    ctx.lineWidth = 5
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
     ctx.beginPath()
     ctx.moveTo(x1, y)
     ctx.lineTo(x2, y)
     ctx.stroke()
 
+    // Add bracket on left side for "on-duty" periods
+    if (key === 'on_duty') {
+      ctx.strokeStyle = '#555'
+      ctx.lineWidth = 1.5
+      const bracketW = 6
+      ctx.beginPath()
+      ctx.moveTo(x1 - bracketW, y - 8)
+      ctx.lineTo(x1 - bracketW, y)
+      ctx.lineTo(x1, y)
+      ctx.stroke()
+    }
+
     prevKey = key
     prevX = x2
+    prevY = y
   }
 }
 
 function drawHeader(ctx, logData, dayNumber, totalDays) {
-  ctx.fillStyle = '#111'
-  ctx.font = 'bold 13px sans-serif'
-  ctx.textAlign = 'left'
-  ctx.fillText(`ELD Daily Log — ${logData.date}`, 10, 18)
+  // Title background
+  ctx.fillStyle = '#1565c0'
+  ctx.fillRect(0, 0, W, 35)
 
+  // Title
+  ctx.fillStyle = '#fff'
+  ctx.font = 'bold 18px sans-serif'
+  ctx.textAlign = 'left'
+  ctx.fillText('FMCSA Electronic Logging Device (ELD) Daily Log', 10, 24)
+
+  // Border around title
+  ctx.strokeStyle = '#1565c0'
+  ctx.lineWidth = 2
+  ctx.strokeRect(0, 0, W, 35)
+
+  // Header info (date, driver, vehicle)
+  ctx.fillStyle = '#111'
+  ctx.font = 'bold 12px sans-serif'
+  ctx.textAlign = 'left'
+  let infoY = 50
+
+  ctx.fillText(`Date: ${logData.date}`, 10, infoY)
+  ctx.fillText(`Day ${dayNumber} of ${totalDays}`, 250, infoY)
+  ctx.fillText(`Driver Start Time: ${logData.driver_start_time}`, 400, infoY)
+
+  infoY += 18
   ctx.font = '11px sans-serif'
-  ctx.fillStyle = '#444'
-  ctx.fillText(
-    `Day ${dayNumber} of ${totalDays}  |  Start: ${logData.driver_start_time}  |  Miles today: ${logData.miles_today}`,
-    10,
-    35
-  )
+  ctx.fillStyle = '#333'
+  ctx.fillText(`Miles Today: ${logData.miles_today} mi`, 10, infoY)
+
+  // Totals preview (top right)
+  ctx.font = 'bold 10px sans-serif'
+  ctx.textAlign = 'right'
+  ctx.fillStyle = '#555'
+  ctx.fillText('Daily Totals:', W - 10, 50)
+
+  const totalsPreview = logData.totals
+  let previewY = 62
+  const labelColor = { off_duty: '#2e7d32', sleeper: '#e65100', driving: '#1565c0', on_duty: '#c2185b' }
+
+  Object.entries(totalsPreview).forEach(([key, value]) => {
+    ctx.fillStyle = labelColor[key]
+    ctx.fillText(`${ROW_LABELS[ROW_KEYS.indexOf(key)]}: ${value.toFixed(2)}h`, W - 10, previewY)
+    previewY += 12
+  })
 
   // Border
-  ctx.strokeStyle = '#ccc'
-  ctx.lineWidth = 1
+  ctx.strokeStyle = '#333'
+  ctx.lineWidth = 2
   ctx.strokeRect(0.5, 0.5, W - 1, H - 1)
 }
 
@@ -160,29 +219,49 @@ function drawTotals(ctx, totals) {
     driving: 'Driving',
     on_duty: 'On Duty',
   }
+  const colors = {
+    off_duty: '#2e7d32',
+    sleeper: '#e65100',
+    driving: '#1565c0',
+    on_duty: '#c2185b',
+  }
+
   let x = GRID_LEFT
   const colW = GRID_W / 4
-  ctx.font = '10px sans-serif'
-  ctx.textAlign = 'center'
+  const boxH = 50
+  const boxY = TOTALS_Y - 15
 
   Object.entries(labels).forEach(([key, label], i) => {
-    const cx = x + colW * i + colW / 2
-    ctx.fillStyle = '#555'
-    ctx.fillText(label, cx, TOTALS_Y)
-    ctx.fillStyle = '#111'
-    ctx.font = 'bold 11px sans-serif'
-    ctx.fillText(`${(totals[key] || 0).toFixed(2)}h`, cx, TOTALS_Y + 14)
-    ctx.font = '10px sans-serif'
+    const cx = x + colW * i
+    const boxX = cx
+    const color = colors[key]
 
-    // Separator
-    if (i > 0) {
-      ctx.strokeStyle = '#ddd'
-      ctx.lineWidth = 0.5
-      ctx.beginPath()
-      ctx.moveTo(x + colW * i, TOTALS_Y - 6)
-      ctx.lineTo(x + colW * i, TOTALS_Y + 16)
-      ctx.stroke()
-    }
+    // Background box
+    ctx.fillStyle = color
+    ctx.globalAlpha = 0.1
+    ctx.fillRect(boxX + 2, boxY, colW - 4, boxH)
+    ctx.globalAlpha = 1.0
+
+    // Border
+    ctx.strokeStyle = color
+    ctx.lineWidth = 1.5
+    ctx.strokeRect(boxX + 2, boxY, colW - 4, boxH)
+
+    // Label
+    ctx.fillStyle = '#333'
+    ctx.font = 'bold 11px sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText(label, boxX + colW / 2, boxY + 16)
+
+    // Value
+    ctx.fillStyle = color
+    ctx.font = 'bold 18px sans-serif'
+    ctx.fillText(`${(totals[key] || 0).toFixed(2)}`, boxX + colW / 2, boxY + 38)
+
+    // Units
+    ctx.fillStyle = '#555'
+    ctx.font = '10px sans-serif'
+    ctx.fillText('hours', boxX + colW / 2, boxY + 48)
   })
 }
 
@@ -217,30 +296,101 @@ export default function LogSheet({ logData, dayNumber, totalDays }) {
   function handlePrint() {
     const canvas = canvasRef.current
     if (!canvas) return
-    const dataUrl = canvas.toDataURL('image/png')
+    const dataUrl = canvas.toDataURL('image/png', 1.0)
     const win = window.open('', '_blank')
+    const pageTitle = `ELD Daily Log - ${logData.date} - Day ${dayNumber} of ${totalDays}`
     win.document.write(`
-      <html><head><title>ELD Log — ${logData.date}</title>
-      <style>
-        body { margin: 0; }
-        img { width: 100%; max-width: 900px; display: block; }
-        @media print { body { margin: 0; } }
-      </style></head>
-      <body><img src="${dataUrl}" onload="window.print();window.close()"/></body>
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${pageTitle}</title>
+          <style>
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            body {
+              font-family: Arial, sans-serif;
+              background: #f5f5f5;
+              padding: 10px;
+            }
+            .container {
+              background: white;
+              max-width: 1000px;
+              margin: 0 auto;
+              padding: 10px;
+              box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            }
+            img {
+              width: 100%;
+              height: auto;
+              display: block;
+              border: 1px solid #ddd;
+            }
+            .footer {
+              margin-top: 20px;
+              text-align: center;
+              font-size: 11px;
+              color: #666;
+              padding: 10px;
+              border-top: 1px solid #ddd;
+            }
+            @media print {
+              body {
+                background: white;
+                padding: 0;
+              }
+              .container {
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+              }
+              .footer {
+                display: none;
+              }
+              img {
+                border: none;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <img src="${dataUrl}" alt="${pageTitle}">
+            <div class="footer">
+              Printed: ${new Date().toLocaleString()} | Page ${dayNumber} of ${totalDays}
+            </div>
+          </div>
+          <script>
+            window.onload = function() {
+              setTimeout(() => {
+                window.print();
+                setTimeout(() => window.close(), 500);
+              }, 300);
+            }
+          </script>
+        </body>
       </html>
     `)
   }
 
   return (
     <div className="log-sheet">
+      <div className="log-sheet__header">
+        <h3 className="log-sheet__title">Day {dayNumber} of {totalDays}</h3>
+        <button
+          className="log-sheet__print-btn"
+          onClick={handlePrint}
+          title="Click to print this daily log sheet"
+        >
+          🖨️ Print Day {dayNumber}
+        </button>
+      </div>
       <canvas ref={canvasRef} className="log-sheet__canvas" />
-      <button
-        className="log-sheet__print-btn no-print"
-        onClick={handlePrint}
-        title="Print this log sheet"
-      >
-        🖨 Print Day {dayNumber}
-      </button>
     </div>
   )
 }

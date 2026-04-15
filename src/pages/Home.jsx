@@ -147,6 +147,7 @@ export default function Home() {
               route={result?.route || null}
               stops={result?.stops || []}
               summary={summary}
+              logSheets={result?.log_sheets || []}
               loading={loading}
               error={serverError}
             />

@@ -1,5 +1,13 @@
 import { useEffect } from 'react'
-import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from 'react-leaflet'
+import {
+  MapContainer,
+  TileLayer,
+  Polyline,
+  Marker,
+  Popup,
+  ZoomControl,
+  useMap,
+} from 'react-leaflet'
 import L from 'leaflet'
 import './RouteMap.css'
 
@@ -29,16 +37,28 @@ const STOP_LABELS = {
   reset_34h: '34h cycle reset',
 }
 
-function makeIcon(color) {
+const STOP_MARKER_TEXT = {
+  rest_30min: '30m',
+  fuel: 'F',
+  rest_10h: '10h',
+  reset_34h: '34h',
+}
+
+function makeIcon(color, text = '') {
+  const textColor = '#ffffff'
   return L.divIcon({
     className: '',
     html: `<div style="
-      width:14px;height:14px;border-radius:50%;
+      width:18px;height:18px;border-radius:50%;
       background:${color};border:2.5px solid white;
       box-shadow:0 1px 4px rgba(0,0,0,0.4);
-    "></div>`,
-    iconSize: [14, 14],
-    iconAnchor: [7, 7],
+      display:flex;align-items:center;justify-content:center;
+      font-size:9px;font-weight:700;color:${textColor};
+      font-family:'IBM Plex Mono', monospace;
+      line-height:1;
+    ">${text}</div>`,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9],
   })
 }
 
@@ -66,7 +86,14 @@ function FitBounds({ polyline }) {
   return null
 }
 
-export default function RouteMap({ route, stops, summary, loading = false, error = null }) {
+export default function RouteMap({
+  route,
+  stops,
+  summary,
+  logSheets = [],
+  loading = false,
+  error = null,
+}) {
   const emptyTitle = loading
     ? 'Calculating route and stops...'
     : error
@@ -94,6 +121,17 @@ export default function RouteMap({ route, stops, summary, loading = false, error
   const { polyline, origin, pickup, dropoff } = route
   const center =
     polyline.length > 0 ? polyline[Math.floor(polyline.length / 2)] : [39.5, -98.35]
+  const totalMiles = Number(route.total_miles || 0)
+  const polylineSpan = Math.max(polyline.length - 1, 1)
+
+  function getIndexForFraction(fraction) {
+    return Math.max(0, Math.min(polylineSpan, Math.round(fraction * polylineSpan)))
+  }
+
+  function getApproxMile(polylineIndex) {
+    if (!totalMiles || polylineSpan <= 0) return null
+    return Math.round((polylineIndex / polylineSpan) * totalMiles)
+  }
 
   // Build stop markers from the stops array
   // We'll distribute them roughly along the polyline
@@ -105,8 +143,61 @@ export default function RouteMap({ route, stops, summary, loading = false, error
         Math.floor(((i + 1) / (stops.length + 1)) * polyline.length),
         polyline.length - 1
       )
-      return { ...stop, position: polyline[idx] }
+      return {
+        ...stop,
+        position: polyline[idx],
+        polylineIndex: idx,
+        approxMile: getApproxMile(idx),
+      }
     })
+
+  const hasExplicitRest10 = stops.some(stop => stop.type === 'rest_10h')
+  const inferredRestStops = []
+
+  if (!hasExplicitRest10 && Array.isArray(logSheets) && logSheets.length > 1 && totalMiles > 0) {
+    let cumulativeMiles = 0
+
+    for (let dayIndex = 0; dayIndex < logSheets.length - 1; dayIndex += 1) {
+      cumulativeMiles += Number(logSheets[dayIndex]?.miles_today || 0)
+      const fraction = Math.max(0, Math.min(1, cumulativeMiles / totalMiles))
+      const idx = getIndexForFraction(fraction)
+
+      if (idx > 0 && idx < polyline.length) {
+        inferredRestStops.push({
+          type: 'rest_10h',
+          duration_hours: 10,
+          notes: `Mandatory 10h rest after Day ${dayIndex + 1}`,
+          position: polyline[idx],
+          polylineIndex: idx,
+          approxMile: Math.max(0, Math.round(cumulativeMiles)),
+        })
+      }
+    }
+  }
+
+  const allMarkers = [...stopMarkers, ...inferredRestStops]
+    .filter(marker => marker.position)
+    .sort((a, b) => (a.polylineIndex || 0) - (b.polylineIndex || 0))
+
+  const fuelMarkerMiles = allMarkers
+    .filter(marker => marker.type === 'fuel')
+    .map(marker => marker.approxMile)
+    .filter(mile => Number.isFinite(mile))
+
+  const rest10MarkerMiles = allMarkers
+    .filter(marker => marker.type === 'rest_10h')
+    .map(marker => marker.approxMile)
+    .filter(mile => Number.isFinite(mile))
+
+  const fuelWhereText =
+    fuelMarkerMiles.length > 0
+      ? fuelMarkerMiles.map(mile => `~mile ${mile}`).join(', ')
+      : 'No fuel stop for this distance.'
+
+  const restWhereText =
+    rest10MarkerMiles.length > 0
+      ? rest10MarkerMiles.map(mile => `~mile ${mile}`).join(', ')
+      : 'No 10h rest for single-day trip.'
 
   return (
     <div className="route-map">
@@ -134,8 +225,11 @@ export default function RouteMap({ route, stops, summary, loading = false, error
       <MapContainer
         center={center}
         zoom={6}
+        zoomControl={false}
         style={{ width: '100%', height: '100%' }}
       >
+        <ZoomControl position="topright" />
+
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -180,11 +274,14 @@ export default function RouteMap({ route, stops, summary, loading = false, error
         )}
 
         {/* Intermediate stop markers */}
-        {stopMarkers.map((stop, i) => (
+        {allMarkers.map((stop, i) => {
+          const markerKey = `${stop.type}-${stop.polylineIndex ?? 'na'}-${stop.approxMile ?? 'na'}-${i}`
+
+          return (
           <Marker
-            key={i}
+            key={markerKey}
             position={stop.position}
-            icon={makeIcon(STOP_COLORS[stop.type] || '#6b7280')}
+            icon={makeIcon(STOP_COLORS[stop.type] || '#6b7280', STOP_MARKER_TEXT[stop.type] || '')}
           >
             <Popup>
               <strong>{STOP_LABELS[stop.type] || stop.type}</strong>
@@ -196,10 +293,27 @@ export default function RouteMap({ route, stops, summary, loading = false, error
               )}
               <br />
               {stop.duration_hours}h
+              {Number.isFinite(stop.approxMile) && (
+                <>
+                  <br />
+                  Approx. mile {stop.approxMile}
+                </>
+              )}
             </Popup>
           </Marker>
-        ))}
+          )
+        })}
       </MapContainer>
+
+      <div className="route-map__where panel no-print" aria-live="polite">
+        <h4>Where are key stops?</h4>
+        <p>
+          <strong>Fuel stop:</strong> {fuelWhereText}
+        </p>
+        <p>
+          <strong>10h rest:</strong> {restWhereText}
+        </p>
+      </div>
 
       {/* Legend */}
       <div className="route-map__legend no-print">
@@ -213,7 +327,7 @@ export default function RouteMap({ route, stops, summary, loading = false, error
           </div>
         ))}
 
-        {stopMarkers.length > 0 && (
+        {allMarkers.length > 0 && (
           <p className="route-map__legend-note">
             Intermediate stop markers are estimated along the route line.
           </p>

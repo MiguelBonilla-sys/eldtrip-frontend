@@ -12,12 +12,12 @@ L.Icon.Default.mergeOptions({
 })
 
 const STOP_COLORS = {
-  pickup: '#e02424',
-  dropoff: '#e02424',
-  rest_30min: '#d97706',
-  fuel: '#2563eb',
-  rest_10h: '#7c3aed',
-  reset_34h: '#111827',
+  pickup: '#c2185b',        // On-Duty pink
+  dropoff: '#c2185b',       // On-Duty pink
+  rest_30min: '#f59e0b',    // Amber for mandatory break
+  fuel: '#1565c0',          // Driving blue
+  rest_10h: '#e65100',      // Sleeper orange
+  reset_34h: '#2e7d32',     // Off-Duty green
 }
 
 const STOP_LABELS = {
@@ -112,7 +112,7 @@ export default function RouteMap({ route, stops }) {
 
         {/* Origin marker */}
         {origin && (
-          <Marker position={[origin.lat, origin.lng]} icon={makeEndpointIcon('#059669')}>
+          <Marker position={[origin.lat, origin.lng]} icon={makeEndpointIcon('#2e7d32')}>
             <Popup>
               <strong>Start</strong><br />{origin.display_name}
             </Popup>
@@ -121,7 +121,7 @@ export default function RouteMap({ route, stops }) {
 
         {/* Pickup marker */}
         {pickup && (
-          <Marker position={[pickup.lat, pickup.lng]} icon={makeEndpointIcon('#e02424')}>
+          <Marker position={[pickup.lat, pickup.lng]} icon={makeEndpointIcon('#c2185b')}>
             <Popup>
               <strong>📦 Pickup</strong><br />{pickup.display_name}
             </Popup>
@@ -130,7 +130,7 @@ export default function RouteMap({ route, stops }) {
 
         {/* Dropoff marker */}
         {dropoff && (
-          <Marker position={[dropoff.lat, dropoff.lng]} icon={makeEndpointIcon('#7c3aed')}>
+          <Marker position={[dropoff.lat, dropoff.lng]} icon={makeEndpointIcon('#c2185b')}>
             <Popup>
               <strong>🏁 Dropoff</strong><br />{dropoff.display_name}
             </Popup>

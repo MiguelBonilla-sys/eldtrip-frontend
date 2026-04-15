@@ -1,0 +1,80 @@
+.location-autocomplete {
+  position: relative;
+}
+
+.location-autocomplete__control {
+  position: relative;
+}
+
+.location-autocomplete__spinner {
+  position: absolute;
+  right: 0.7rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 50%;
+  border: 2px solid rgba(22, 84, 204, 0.24);
+  border-top-color: var(--color-primary);
+  animation: location-spin 820ms linear infinite;
+}
+
+.location-autocomplete__menu {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.location-autocomplete__status {
+  padding: 0.62rem 0.72rem;
+  font-size: 0.84rem;
+  color: var(--color-text-muted);
+}
+
+.location-autocomplete__option {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  background: transparent;
+  text-align: left;
+  padding: 0.52rem 0.72rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.location-autocomplete__option:last-child {
+  border-bottom: 0;
+}
+
+.location-autocomplete__option:hover,
+.location-autocomplete__option--active {
+  background: var(--color-surface-soft);
+}
+
+.location-autocomplete__option-label {
+  color: var(--color-text);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.location-autocomplete__option-meta {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+@keyframes location-spin {
+  to {
+    transform: translateY(-50%) rotate(360deg);
+  }
+}

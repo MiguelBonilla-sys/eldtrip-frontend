@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import LocationAutocomplete from './LocationAutocomplete'
 import './TripForm.css'
 
 const INITIAL_STATE = {
@@ -42,13 +43,34 @@ export default function TripForm({ onPlanReady, loading, serverError }) {
   const [touched, setTouched] = useState({})
   const errorCount = Object.values(errors).filter(Boolean).length
 
+  function handleLocationChange(name, value) {
+    setFields(prev => {
+      const next = { ...prev, [name]: value }
+      if (touched[name]) {
+        const nextErrors = validate(next)
+        setErrors(prevErrors => ({ ...prevErrors, [name]: nextErrors[name] }))
+      }
+      return next
+    })
+  }
+
   function handleChange(e) {
     const { name, value } = e.target
-    setFields(prev => ({ ...prev, [name]: value }))
-    if (touched[name]) {
-      const newErrors = validate({ ...fields, [name]: value })
-      setErrors(prev => ({ ...prev, [name]: newErrors[name] }))
-    }
+
+    setFields(prev => {
+      const next = { ...prev, [name]: value }
+      if (touched[name]) {
+        const nextErrors = validate(next)
+        setErrors(prevErrors => ({ ...prevErrors, [name]: nextErrors[name] }))
+      }
+      return next
+    })
+  }
+
+  function handleLocationBlur(name, value) {
+    setTouched(prev => ({ ...prev, [name]: true }))
+    const nextErrors = validate({ ...fields, [name]: value })
+    setErrors(prev => ({ ...prev, [name]: nextErrors[name] }))
   }
 
   function handleBlur(e) {
@@ -105,25 +127,19 @@ export default function TripForm({ onPlanReady, loading, serverError }) {
           <p className="trip-form__group-title">Route Locations</p>
 
           {['current_location', 'pickup_location', 'dropoff_location'].map(name => (
-            <div className="trip-form__field" key={name}>
-              <label htmlFor={name}>{FIELD_LABELS[name]}</label>
-              <input
-                id={name}
-                name={name}
-                type="text"
-                value={fields[name]}
-                placeholder={PLACEHOLDERS[name]}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                aria-invalid={!!errors[name]}
-                aria-describedby={errors[name] ? `${name}-error` : undefined}
-              />
-              {errors[name] && (
-                <span className="trip-form__field-error" id={`${name}-error`}>
-                  {errors[name]}
-                </span>
-              )}
-            </div>
+            <LocationAutocomplete
+              key={name}
+              id={name}
+              name={name}
+              label={FIELD_LABELS[name]}
+              placeholder={PLACEHOLDERS[name]}
+              value={fields[name]}
+              disabled={loading}
+              error={errors[name]}
+              errorId={`${name}-error`}
+              onValueChange={handleLocationChange}
+              onBlurField={handleLocationBlur}
+            />
           ))}
         </fieldset>
 

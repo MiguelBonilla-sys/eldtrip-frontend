@@ -14,3 +14,15 @@ export async function planTrip(tripData) {
   const response = await api.post('/api/trips/plan/', tripData)
   return response.data
 }
+
+/**
+ * Search known locations for dropdown suggestions.
+ * @param {string} query
+ * @param {number} [limit=8]
+ */
+export async function searchLocations(query, limit = 8) {
+  const response = await api.get('/api/trips/locations/', {
+    params: { q: query, limit },
+  })
+  return response.data?.results ?? []
+}

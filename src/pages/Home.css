@@ -1,0 +1,149 @@
+.home {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.home__header {
+  background: var(--color-gray-900);
+  color: white;
+  padding: 16px 24px;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.home__header h1 {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.home__header p {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.home__main {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 20px;
+  padding: 20px;
+  flex: 1;
+  align-items: start;
+}
+
+.home__sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 20px;
+}
+
+.home__summary {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.home__summary h3 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: var(--color-gray-700);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.home__summary dl {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.home__summary dl > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.875rem;
+}
+
+.home__summary dt {
+  color: var(--color-gray-600);
+}
+
+.home__summary dd {
+  font-weight: 600;
+  color: var(--color-gray-900);
+}
+
+.home__content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.home__map-wrapper {
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.home__logs-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-gray-900);
+  margin-bottom: 4px;
+}
+
+.home__logs-subtitle {
+  font-size: 0.85rem;
+  color: var(--color-gray-400);
+  margin-bottom: 12px;
+}
+
+.home__logs-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Responsive: mobile */
+@media (max-width: 768px) {
+  .home__header {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .home__main {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+
+  .home__sidebar {
+    position: static;
+  }
+}
+
+@media print {
+  .home__header,
+  .home__sidebar {
+    display: none;
+  }
+
+  .home__main {
+    grid-template-columns: 1fr;
+    padding: 0;
+  }
+
+  .home__map-wrapper {
+    display: none;
+  }
+
+  .home__logs-title,
+  .home__logs-subtitle {
+    display: none;
+  }
+}

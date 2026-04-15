@@ -1,0 +1,39 @@
+.log-sheet {
+  position: relative;
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 12px;
+  overflow-x: auto;
+}
+
+.log-sheet__canvas {
+  display: block;
+  max-width: 100%;
+}
+
+.log-sheet__print-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: white;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  color: var(--color-gray-600);
+  box-shadow: var(--shadow-sm);
+  transition: background 0.15s;
+}
+
+.log-sheet__print-btn:hover {
+  background: var(--color-gray-100);
+}
+
+@media print {
+  .log-sheet {
+    box-shadow: none;
+    padding: 0;
+    break-inside: avoid;
+  }
+}

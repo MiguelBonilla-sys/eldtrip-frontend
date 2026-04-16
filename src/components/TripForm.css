@@ -95,6 +95,7 @@
 }
 
 .trip-form__field input {
+  width: 100%;
   border: 1px solid var(--color-border-strong);
   border-radius: 11px;
   padding: 0.62rem 0.74rem;

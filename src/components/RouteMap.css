@@ -13,9 +13,9 @@
   place-items: center;
   text-align: center;
   background:
-    radial-gradient(circle at 20% 30%, rgba(22, 84, 204, 0.14), transparent 34%),
-    radial-gradient(circle at 100% 0%, rgba(230, 81, 0, 0.14), transparent 38%),
-    linear-gradient(160deg, #f6f9fe 0%, #edf3fb 100%);
+    radial-gradient(circle at 20% 30%, rgba(79, 141, 247, 0.2), transparent 34%),
+    radial-gradient(circle at 100% 0%, rgba(230, 81, 0, 0.2), transparent 38%),
+    linear-gradient(160deg, #111e33 0%, #0b1728 100%);
 }
 
 .route-map__empty-content {
@@ -52,8 +52,8 @@
 }
 
 .route-map__summary > div {
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(173, 188, 213, 0.45);
+  background: rgba(12, 24, 41, 0.88);
+  border: 1px solid rgba(88, 122, 174, 0.45);
   border-radius: 10px;
   padding: 0.4rem 0.48rem;
   display: grid;
@@ -86,9 +86,9 @@
 }
 
 .route-map__overlay--loading {
-  background: #fff4dd;
-  border-color: rgba(240, 167, 36, 0.35);
-  color: #8f5a00;
+  background: #3f2c14;
+  border-color: rgba(245, 158, 11, 0.45);
+  color: #ffdca2;
 }
 
 .route-map__overlay--error {
@@ -103,8 +103,8 @@
   bottom: 12px;
   z-index: 1000;
   width: min(330px, calc(100% - 24px));
-  background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(180, 196, 223, 0.65);
+  background: rgba(12, 24, 41, 0.92);
+  border-color: rgba(88, 122, 174, 0.45);
   border-radius: 12px;
   padding: 0.62rem 0.7rem;
 }
@@ -133,9 +133,9 @@
   position: absolute;
   bottom: 126px;
   left: 12px;
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(12, 24, 41, 0.92);
   border-radius: 12px;
-  border: 1px solid rgba(180, 196, 223, 0.65);
+  border: 1px solid rgba(88, 122, 174, 0.45);
   box-shadow: var(--shadow-sm);
   padding: 0.55rem 0.68rem;
   display: flex;
@@ -158,16 +158,66 @@
   height: 11px;
   border-radius: 50%;
   flex-shrink: 0;
-  border: 1.5px solid #fff;
+  border: 1.5px solid #d7e5ff;
   box-shadow: 0 0 0 1px rgba(20, 33, 61, 0.12);
 }
 
 .route-map__legend-note {
   margin-top: 0.3rem;
   padding-top: 0.38rem;
-  border-top: 1px solid rgba(183, 197, 219, 0.42);
+  border-top: 1px solid rgba(88, 122, 174, 0.45);
   color: var(--color-text-muted);
   font-size: 0.69rem;
+}
+
+.route-map .leaflet-popup-content-wrapper {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.route-map .leaflet-popup-tip {
+  background: var(--color-surface);
+}
+
+.route-map .leaflet-popup-content {
+  color: var(--color-text);
+}
+
+.route-map .leaflet-popup-close-button {
+  color: #c8dcff;
+}
+
+.route-map .leaflet-popup-close-button:hover {
+  color: #ffffff;
+  background: rgba(79, 141, 247, 0.28);
+  border-radius: 8px;
+}
+
+.route-map .leaflet-popup-close-button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: 8px;
+}
+
+.route-map .leaflet-control-zoom a {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.route-map .leaflet-control-zoom a:hover {
+  background: var(--color-surface-soft);
+}
+
+.route-map .leaflet-control-attribution {
+  background: rgba(10, 19, 34, 0.78);
+  color: #9fb4da;
+}
+
+.route-map .leaflet-control-attribution a {
+  color: #b7ccf0;
 }
 
 @media (max-width: 880px) {

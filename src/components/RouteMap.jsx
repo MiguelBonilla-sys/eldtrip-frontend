@@ -231,13 +231,13 @@ export default function RouteMap({
         <ZoomControl position="topright" />
 
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         />
 
         {polyline.length > 0 && (
           <>
-            <Polyline positions={polyline} color="#1a56db" weight={3} opacity={0.8} />
+            <Polyline positions={polyline} color="#4f8df7" weight={3.2} opacity={0.92} />
             <FitBounds polyline={polyline} />
           </>
         )}

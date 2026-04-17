@@ -78,7 +78,7 @@
 .trip-form__group-helper {
   margin-top: -0.1rem;
   font-size: 0.77rem;
-  color: #5b6d8f;
+  color: var(--color-text-muted);
   line-height: 1.35;
 }
 
@@ -102,7 +102,7 @@
   min-height: 42px;
   font-size: 0.95rem;
   color: var(--color-text);
-  background: #fff;
+  background: var(--color-surface);
   transition:
     border-color 180ms var(--ease-standard),
     box-shadow 180ms var(--ease-standard),
@@ -110,12 +110,17 @@
 }
 
 .trip-form__field input:hover {
-  border-color: #8fa3c9;
+  border-color: #5b7cad;
 }
 
 .trip-form__field input:focus {
   border-color: var(--color-primary);
   box-shadow: var(--focus-ring);
+}
+
+.trip-form__field input::placeholder {
+  color: #9ab1d8;
+  opacity: 1;
 }
 
 .trip-form__field input[aria-invalid="true"] {
@@ -142,7 +147,7 @@
   font-weight: 700;
   letter-spacing: 0.02em;
   color: #fff;
-  background: linear-gradient(142deg, var(--color-primary) 0%, #2f79e2 100%);
+  background: linear-gradient(142deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   display: inline-flex;
   align-items: center;
   justify-content: center;

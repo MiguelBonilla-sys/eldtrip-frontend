@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title">
+  <title id="title">ELD Trip Planner Truck</title>
+  <rect width="256" height="256" rx="44" fill="#1565c0"/>
+  <rect x="34" y="90" width="126" height="56" rx="8" fill="#ffffff"/>
+  <rect x="160" y="102" width="46" height="44" rx="6" fill="#e3f2fd"/>
+  <path d="M206 118h20l8 16v12h-28z" fill="#bbdefb"/>
+  <circle cx="84" cy="164" r="18" fill="#263238"/>
+  <circle cx="84" cy="164" r="8" fill="#90a4ae"/>
+  <circle cx="188" cy="164" r="18" fill="#263238"/>
+  <circle cx="188" cy="164" r="8" fill="#90a4ae"/>
+  <rect x="48" y="106" width="74" height="20" rx="4" fill="#bbdefb"/>
+</svg>
